@@ -16,7 +16,7 @@ export class PipefyApiError extends Error {
 export class PipefyService {
   private readonly API_URL = 'https://api.pipefy.com/graphql';
 
-  async updateCardField(cardId: string, fieldId: string, value: string): Promise<void> {
+  async updateCardField(cardId: string | number, fieldId: string | number, value: string): Promise<void> {
     try {
       const response = await fetch(this.API_URL, {
         method: 'POST',
@@ -26,7 +26,7 @@ export class PipefyService {
         },
         body: JSON.stringify({
           query: UPDATE_CARD_FIELD_MUTATION,
-          variables: { cardId, fieldId, value },
+          variables: { cardId: cardId.toString(), fieldId: fieldId.toString(), value },
         }),
       });
 
@@ -38,13 +38,13 @@ export class PipefyService {
       }
 
       logger.info({ cardId, fieldId, value }, 'Card field updated successfully');
-    } catch (error) {
-      logger.error({ error, cardId, fieldId }, 'Error updating Pipefy card field');
+    } catch (error: any) {
+      logger.error({ errorMsg: error.message, error, cardId, fieldId }, 'Error updating Pipefy card field');
       throw error;
     }
   }
 
-  async getCardDetails(cardId: string): Promise<{ id: string; fields: Array<{ id: string; value: string }> }> {
+  async getCardDetails(cardId: string | number): Promise<{ id: string; fields: Array<{ id: string; value: string }> }> {
     try {
       const response = await fetch(this.API_URL, {
         method: 'POST',
@@ -54,7 +54,7 @@ export class PipefyService {
         },
         body: JSON.stringify({
           query: GET_CARD_DETAILS_QUERY,
-          variables: { cardId },
+          variables: { cardId: cardId.toString() },
         }),
       });
 
@@ -66,8 +66,8 @@ export class PipefyService {
       }
 
       return body.data.card;
-    } catch (error) {
-      logger.error({ error, cardId }, 'Error fetching Pipefy card details');
+    } catch (error: any) {
+      logger.error({ errorMsg: error.message, error, cardId }, 'Error fetching Pipefy card details');
       throw error;
     }
   }
