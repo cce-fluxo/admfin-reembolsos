@@ -18,7 +18,9 @@ export const GET_CARD_DETAILS_QUERY = `
       id
       title
       fields {
-        id
+        field {
+          id
+        }
         value
         name
       }

@@ -65,7 +65,18 @@ export class PipefyService {
         throw new PipefyApiError(errorMessage, response.status);
       }
 
-      return body.data.card;
+      const card = body.data.card;
+      
+      // Achata a resposta do Pipefy preenchendo 'id' a partir de 'field.id' para manter compatibilidade com a tipagem
+      if (card.fields) {
+        card.fields = card.fields.map((f: any) => ({
+          id: f.field?.id,
+          value: f.value,
+          name: f.name
+        }));
+      }
+
+      return card;
     } catch (error: any) {
       logger.error({ errorMsg: error.message, error, cardId }, 'Error fetching Pipefy card details');
       throw error;
