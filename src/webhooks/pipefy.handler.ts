@@ -54,13 +54,14 @@ function validateSignature(signature: string, payload: any): void {
 }
 
 async function handleFieldUpdate(data: any): Promise<void> {
-  const { card, field } = data;
+  const { card, field, new_value } = data;
+  const fieldValue = new_value || field?.value;
 
-  if (field && field.id && field.id.toString() === env.PIPEFY_CENTRO_CUSTO_FIELD_ID && field.value) {
-    logger.info({ cardId: card.id, codigoProjeto: field.value }, 'Updating Centro de Custo from ContaAzul');
+  if (field && field.id && field.id.toString() === env.PIPEFY_CENTRO_CUSTO_FIELD_ID && fieldValue) {
+    logger.info({ cardId: card.id, codigoProjeto: fieldValue }, 'Updating Centro de Custo from ContaAzul');
     
     try {
-      const project = await contaAzulService.getProjectByCodigo(field.value);
+      const project = await contaAzulService.getProjectByCodigo(fieldValue);
       const centroCusto = contaAzulService.getCentroDeCusto(project);
       
       await pipefyService.updateCardField(card.id, env.PIPEFY_CENTRO_CUSTO_FIELD_ID, centroCusto);
