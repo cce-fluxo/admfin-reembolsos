@@ -65,8 +65,8 @@ async function handleFieldUpdate(data: any): Promise<void> {
       const centroCusto = contaAzulService.getCentroDeCusto(project);
 
       await pipefyService.updateCardField(card.id, env.PIPEFY_CENTRO_CUSTO_FIELD_ID, centroCusto);
-    } catch (error) {
-      logger.error({ error, cardId: card.id }, 'Failed to process ContaAzul integration');
+    } catch (error: any) {
+      logger.error({ errorMsg: error.message || error, cardId: card.id }, 'Failed to process ContaAzul integration');
     }
   }
 }

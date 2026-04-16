@@ -148,8 +148,9 @@ export class ContaAzulService {
         throw new ContaAzulApiError('Erro ao buscar centro de custo', response.status);
       }
 
-      const data = (await response.json()) as ContaAzulCentroCustoResponse;
-      const found = data.items.find((c) => c.codigo === codigo);
+      const data = (await response.json()) as any;
+      const arrayItens = data.items || data.itens || [];
+      const found = arrayItens.find((c: any) => c.codigo === codigo);
       
       if (!found) {
         throw new ContaAzulApiError(`Centro de custo ${codigo} não encontrado`, 404);
