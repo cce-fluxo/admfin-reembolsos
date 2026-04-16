@@ -56,14 +56,14 @@ function validateSignature(signature: string, payload: any): void {
 async function handleFieldUpdate(data: any): Promise<void> {
   const { card, field, new_value } = data;
   const fieldValue = new_value || field?.value;
-
+  logger.info({ card, field, new_value, fieldValue }, 'Field update');
   if (field && field.id && field.id.toString() === env.PIPEFY_CENTRO_CUSTO_FIELD_ID && fieldValue) {
     logger.info({ cardId: card.id, codigoProjeto: fieldValue }, 'Updating Centro de Custo from ContaAzul');
-    
+
     try {
       const project = await contaAzulService.getProjectByCodigo(fieldValue);
       const centroCusto = contaAzulService.getCentroDeCusto(project);
-      
+
       await pipefyService.updateCardField(card.id, env.PIPEFY_CENTRO_CUSTO_FIELD_ID, centroCusto);
     } catch (error) {
       logger.error({ error, cardId: card.id }, 'Failed to process ContaAzul integration');
@@ -80,11 +80,11 @@ async function handleCardMove(data: any): Promise<void> {
 
   if (toIdStr === env.SHEETS_FASE_MONITORADA) {
     logger.info({ cardId: card.id }, 'Fetching card details for Google Sheets insertion');
-    
+
     try {
       const cardDetails = await pipefyService.getCardDetails(card.id);
-      
-      const getFieldValue = (id: string) => 
+
+      const getFieldValue = (id: string) =>
         cardDetails.fields.find(f => f.id === id)?.value || '';
 
       await sheetsService.insertRow(card.id.toString(), {
