@@ -24,19 +24,18 @@ export class WebhookValidationError extends Error {
 export async function handlePipefyWebhook(signature: string, payload: PipefyWebhookPayload): Promise<void> {
   validateSignature(signature, payload);
 
-  // Vamos logar o payload completo para descobrir onde a ação e os campos estão escondidos!
-  logger.info({ raw_payload_keys: Object.keys(payload), raw_payload: JSON.stringify(payload).substring(0, 500) }, 'DUMP_PIPEFY_PAYLOAD');
+  // O payload vem encapsulado dentro da propriedade "data"
+  logger.info({ raw_payload_keys: Object.keys(payload) }, 'PIPEFY_PAYLOAD_DEBUG');
 
-  // Suportando o formato padrão do webhook do Pipefy (action) e formato custom (event.type)
-  const actionType = (payload as any).action || payload.event?.type || (payload as any).event;
-  const data = payload.data || payload;
+  const innerData = payload.data || payload;
+  const actionType = (innerData as any).action || (innerData as any).event?.type || (innerData as any).event;
 
   logger.info({ type: actionType }, 'Processing Pipefy webhook event');
 
   if (actionType === 'card.field_update' || actionType === 'card.update' || actionType === 'card.done') {
-    await handleFieldUpdate(data);
+    await handleFieldUpdate(innerData);
   } else if (actionType === 'card.move') {
-    await handleCardMove(data);
+    await handleCardMove(innerData);
   }
 }
 
@@ -57,7 +56,7 @@ function validateSignature(signature: string, payload: any): void {
 async function handleFieldUpdate(data: any): Promise<void> {
   const { card, field } = data;
 
-  if (field.id === env.PIPEFY_CENTRO_CUSTO_FIELD_ID && field.value) {
+  if (field && field.id && field.id.toString() === env.PIPEFY_CENTRO_CUSTO_FIELD_ID && field.value) {
     logger.info({ cardId: card.id, codigoProjeto: field.value }, 'Updating Centro de Custo from ContaAzul');
     
     try {
@@ -74,7 +73,11 @@ async function handleFieldUpdate(data: any): Promise<void> {
 async function handleCardMove(data: any): Promise<void> {
   const { card, to } = data;
 
-  if (to.id === env.SHEETS_FASE_MONITORADA) {
+  if (!to || !to.id) return;
+
+  const toIdStr = to.id.toString();
+
+  if (toIdStr === env.SHEETS_FASE_MONITORADA) {
     logger.info({ cardId: card.id }, 'Fetching card details for Google Sheets insertion');
     
     try {
@@ -83,7 +86,7 @@ async function handleCardMove(data: any): Promise<void> {
       const getFieldValue = (id: string) => 
         cardDetails.fields.find(f => f.id === id)?.value || '';
 
-      await sheetsService.insertRow(card.id, {
+      await sheetsService.insertRow(card.id.toString(), {
         competencia: getFieldValue(env.FIELD_COMPETENCIA_ID),
         vencimento: getFieldValue(env.FIELD_VENCIMENTO_ID),
         pagamento: getFieldValue(env.FIELD_PAGAMENTO_ID),
@@ -98,8 +101,8 @@ async function handleCardMove(data: any): Promise<void> {
     } catch (error) {
       logger.error({ error, cardId: card.id }, 'Failed to process Sheets insertion');
     }
-  } else if (to.id === env.SHEETS_FASE_SEGUINTE) {
+  } else if (toIdStr === env.SHEETS_FASE_SEGUINTE) {
     logger.info({ cardId: card.id }, 'Removing card from Google Sheets');
-    await sheetsService.removeRow(card.id);
+    await sheetsService.removeRow(card.id.toString());
   }
 }
