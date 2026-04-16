@@ -26,7 +26,7 @@ export class PipefyService {
         },
         body: JSON.stringify({
           query: UPDATE_CARD_FIELD_MUTATION,
-          variables: { cardId: cardId.toString(), fieldId: fieldId.toString(), value },
+          variables: { cardId: cardId.toString(), fieldId: fieldId.toString(), value: [value] },
         }),
       });
 

@@ -1,5 +1,5 @@
 export const UPDATE_CARD_FIELD_MUTATION = `
-  mutation updateCardField($cardId: ID!, $fieldId: ID!, $value: String!) {
+  mutation updateCardField($cardId: ID!, $fieldId: ID!, $value: [UndefinedInput]) {
     updateCardField(input: {
       card_id: $cardId,
       field_id: $fieldId,
