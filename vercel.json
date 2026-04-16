@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "functions": {
+    "api/webhooks/*.ts": {
+      "runtime": "vercel-nodejs@18.x"
+    }
+  }
+}
