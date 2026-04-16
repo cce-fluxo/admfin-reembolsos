@@ -35,6 +35,9 @@ export async function handlePipefyWebhook(signature: string, payload: PipefyWebh
 }
 
 function validateSignature(signature: string, payload: any): void {
+  // Se estivermos usando o secret cru na URL da Vercel (?token=sua_secret)
+  if (signature === env.PIPEFY_WEBHOOK_SECRET) return;
+
   const hmac = crypto.createHmac('sha256', env.PIPEFY_WEBHOOK_SECRET);
   const body = JSON.stringify(payload);
   const digest = hmac.update(body).digest('hex');

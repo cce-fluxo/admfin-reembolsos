@@ -10,15 +10,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const signature = req.headers['x-pipefy-signature'] as string;
+  const token = req.query.token as string;
 
-  if (!signature) {
-    return res.status(401).json({ error: 'Missing signature' });
+  if (!signature && token !== process.env.PIPEFY_WEBHOOK_SECRET) {
+    return res.status(401).json({ error: 'Missing or invalid signature/token' });
   }
+
+  const authKey = signature || token;
 
   try {
     // Em Serverless (Vercel), a execução PODE ser suspensa assim que a resposta é enviada.
     // Portanto, devemos OBRIGATORIAMENTE realizar o processamento ANTES de fechar a resposta.
-    await handlePipefyWebhook(signature, req.body);
+    await handlePipefyWebhook(authKey, req.body);
     
     logger.info('Webhook processed successfully');
     return res.status(200).json({ received: true });
