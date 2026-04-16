@@ -25,7 +25,7 @@ export async function handlePipefyWebhook(signature: string, payload: PipefyWebh
   validateSignature(signature, payload);
 
   // O payload vem encapsulado dentro da propriedade "data"
-  logger.info({ raw_payload_keys: Object.keys(payload) }, 'PIPEFY_PAYLOAD_DEBUG');
+  logger.info({ raw_payload_keys: Object.keys(payload), innerDataPayload: JSON.stringify(payload.data).substring(0, 500) }, 'PIPEFY_PAYLOAD_DEBUG');
 
   const innerData = payload.data || payload;
   const actionType = (innerData as any).action || (innerData as any).event?.type || (innerData as any).event;
