@@ -24,12 +24,15 @@ export class WebhookValidationError extends Error {
 export async function handlePipefyWebhook(signature: string, payload: PipefyWebhookPayload): Promise<void> {
   validateSignature(signature, payload);
 
-  const { event, data } = payload;
-  logger.info({ type: event.type }, 'Processing Pipefy webhook event');
+  // Suportando o formato padrão do webhook do Pipefy (action) e formato custom (event.type)
+  const actionType = (payload as any).action || payload.event?.type;
+  const data = payload.data;
 
-  if (event.type === 'card.field_update') {
+  logger.info({ type: actionType }, 'Processing Pipefy webhook event');
+
+  if (actionType === 'card.field_update' || actionType === 'card.update') {
     await handleFieldUpdate(data);
-  } else if (event.type === 'card.move') {
+  } else if (actionType === 'card.move') {
     await handleCardMove(data);
   }
 }
