@@ -4,6 +4,7 @@ import { z } from 'zod';
 const EnvSchema = z.object({
   PIPEFY_TOKEN: z.string(),
   PIPEFY_WEBHOOK_SECRET: z.string(),
+  PIPEFY_PROJETO_FIELD_ID: z.string(),
   PIPEFY_CENTRO_CUSTO_FIELD_ID: z.string(),
   CONTAAZUL_CLIENT_ID: z.string(),
   CONTAAZUL_CLIENT_SECRET: z.string(),

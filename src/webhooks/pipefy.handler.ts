@@ -57,7 +57,7 @@ async function handleFieldUpdate(data: any): Promise<void> {
   const { card, field, new_value } = data;
   const fieldValue = new_value || field?.value;
   logger.info({ card, field, new_value, fieldValue }, 'Field update');
-  if (field && field.id && field.id.toString() === env.PIPEFY_CENTRO_CUSTO_FIELD_ID && fieldValue) {
+  if (field && field.id && field.id.toString() === env.PIPEFY_PROJETO_FIELD_ID && fieldValue) {
     logger.info({ cardId: card.id, codigoProjeto: fieldValue }, 'Updating Centro de Custo from ContaAzul');
 
     try {
