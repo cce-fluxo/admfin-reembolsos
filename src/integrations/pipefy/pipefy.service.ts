@@ -44,7 +44,7 @@ export class PipefyService {
     }
   }
 
-  async getCardDetails(cardId: string | number): Promise<{ id: string; fields: Array<{ id: string; value: string }> }> {
+  async getCardDetails(cardId: string | number): Promise<{ id: string; current_phase: { id: string }; fields: Array<{ id: string; value: string }> }> {
     try {
       const response = await fetch(this.API_URL, {
         method: 'POST',

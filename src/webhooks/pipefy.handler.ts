@@ -94,14 +94,22 @@ async function handleCardMove(data: any): Promise<void> {
     } catch (error) {
       logger.error({ error, cardId: card.id }, 'Failed to process Sheets insertion');
     }
-  } else if (toIdStr === env.SHEETS_FASE_SEGUINTE) {
-    logger.info({ cardId: card.id }, 'Removing card from Google Sheets');
+  } else {
+    // If it's NOT in the monitored phase, ensure it's removed from the sheet
+    logger.info({ cardId: card.id, targetPhase: toIdStr }, 'Ensuring card is removed from Google Sheets (moved out of monitored phase)');
     await sheetsService.removeRow(card.id.toString());
   }
 }
 
 async function syncCardToSheets(cardId: string, action: 'insert' | 'update'): Promise<void> {
   const cardDetails = await pipefyService.getCardDetails(cardId);
+
+  // Se o card não estiver na fase monitorada, não deve estar na planilha
+  if (cardDetails.current_phase.id.toString() !== env.SHEETS_FASE_MONITORADA) {
+    logger.info({ cardId, currentPhase: cardDetails.current_phase.id }, 'Card is not in monitored phase, ensuring removal from Sheets');
+    await sheetsService.removeRow(cardId);
+    return;
+  }
 
   const getFieldValue = (id: string) =>
     cardDetails.fields.find(f => f.id === id)?.value || '';

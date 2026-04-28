@@ -17,6 +17,9 @@ export const GET_CARD_DETAILS_QUERY = `
     card(id: $cardId) {
       id
       title
+      current_phase {
+        id
+      }
       fields {
         field {
           id

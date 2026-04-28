@@ -26,6 +26,11 @@ function doPost(e) {
 }
 
 function insertRow(sheet, cardId, data) {
+  const rowIndex = findRowIndex(sheet, cardId);
+  if (rowIndex !== -1) {
+    return updateRow(sheet, cardId, data);
+  }
+
   // Columns: Card ID, Competência, Vencimento, Pagamento, Valor, Categoria, Descrição, Cliente/Fornecedor, CNPJ/CPF, Centro de Custo, Observações
   sheet.appendRow([
     cardId,
@@ -43,33 +48,35 @@ function insertRow(sheet, cardId, data) {
 }
 
 function updateRow(sheet, cardId, data) {
-  const values = sheet.getDataRange().getValues();
-  let found = false;
+  const rowIndex = findRowIndex(sheet, cardId);
   
+  if (rowIndex !== -1) {
+    const row = rowIndex + 1;
+    // Update the specific row
+    sheet.getRange(row, 2, 1, 10).setValues([[
+      data.competencia,
+      data.vencimento,
+      data.pagamento,
+      data.valor,
+      data.categoria,
+      data.descricao,
+      data.clienteFornecedor,
+      data.cnpjCpf,
+      data.centroCusto,
+      data.observacoes
+    ]]);
+  }
+}
+
+function findRowIndex(sheet, cardId) {
+  const values = sheet.getDataRange().getValues();
+  const cardIdStr = String(cardId);
   for (let i = 1; i < values.length; i++) { // Skip header
-    if (String(values[i][0]) === String(cardId)) {
-      const row = i + 1;
-      // Update the specific row
-      sheet.getRange(row, 2, 1, 10).setValues([[
-        data.competencia,
-        data.vencimento,
-        data.pagamento,
-        data.valor,
-        data.categoria,
-        data.descricao,
-        data.clienteFornecedor,
-        data.cnpjCpf,
-        data.centroCusto,
-        data.observacoes
-      ]]);
-      found = true;
+    if (String(values[i][0]) === cardIdStr) {
+      return i;
     }
   }
-  
-  // If not found, insert it
-  if (!found) {
-    insertRow(sheet, cardId, data);
-  }
+  return -1;
 }
 
 function removeRowByCardId(sheet, cardId) {
