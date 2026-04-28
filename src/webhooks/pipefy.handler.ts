@@ -57,6 +57,8 @@ async function handleFieldUpdate(data: any): Promise<void> {
   const { card, field, new_value } = data;
   const fieldValue = new_value || field?.value;
   logger.info({ card, field, new_value, fieldValue }, 'Field update');
+
+  // Logic for ContaAzul integration
   if (field && field.id && field.id.toString() === env.PIPEFY_PROJETO_FIELD_ID && fieldValue) {
     logger.info({ cardId: card.id, codigoProjeto: fieldValue }, 'Updating Centro de Custo from ContaAzul');
 
@@ -69,6 +71,13 @@ async function handleFieldUpdate(data: any): Promise<void> {
       logger.error({ errorMsg: error.message || error, cardId: card.id }, 'Failed to process ContaAzul integration');
     }
   }
+
+  // Always sync to Sheets on field update
+  try {
+    await syncCardToSheets(card.id.toString(), 'update');
+  } catch (error) {
+    logger.error({ error, cardId: card.id }, 'Failed to sync card to Sheets on field update');
+  }
 }
 
 async function handleCardMove(data: any): Promise<void> {
@@ -80,25 +89,8 @@ async function handleCardMove(data: any): Promise<void> {
 
   if (toIdStr === env.SHEETS_FASE_MONITORADA) {
     logger.info({ cardId: card.id }, 'Fetching card details for Google Sheets insertion');
-
     try {
-      const cardDetails = await pipefyService.getCardDetails(card.id);
-
-      const getFieldValue = (id: string) =>
-        cardDetails.fields.find(f => f.id === id)?.value || '';
-
-      await sheetsService.insertRow(card.id.toString(), {
-        competencia: getFieldValue(env.FIELD_COMPETENCIA_ID),
-        vencimento: getFieldValue(env.FIELD_VENCIMENTO_ID),
-        pagamento: getFieldValue(env.FIELD_PAGAMENTO_ID),
-        valor: getFieldValue(env.FIELD_VALOR_ID),
-        categoria: getFieldValue(env.FIELD_CATEGORIA_ID),
-        descricao: getFieldValue(env.FIELD_DESCRICAO_ID),
-        clienteFornecedor: getFieldValue(env.FIELD_CLIENTE_FORNECEDOR_ID),
-        cnpjCpf: getFieldValue(env.FIELD_CNPJ_CPF_ID),
-        centroCusto: getFieldValue(env.FIELD_CENTRO_CUSTO_ID),
-        observacoes: getFieldValue(env.FIELD_OBSERVACOES_ID),
-      });
+      await syncCardToSheets(card.id.toString(), 'insert');
     } catch (error) {
       logger.error({ error, cardId: card.id }, 'Failed to process Sheets insertion');
     }
@@ -107,3 +99,30 @@ async function handleCardMove(data: any): Promise<void> {
     await sheetsService.removeRow(card.id.toString());
   }
 }
+
+async function syncCardToSheets(cardId: string, action: 'insert' | 'update'): Promise<void> {
+  const cardDetails = await pipefyService.getCardDetails(cardId);
+
+  const getFieldValue = (id: string) =>
+    cardDetails.fields.find(f => f.id === id)?.value || '';
+
+  const rowData = {
+    competencia: getFieldValue(env.FIELD_COMPETENCIA_ID),
+    vencimento: getFieldValue(env.FIELD_VENCIMENTO_ID),
+    pagamento: getFieldValue(env.FIELD_PAGAMENTO_ID),
+    valor: getFieldValue(env.FIELD_VALOR_ID),
+    categoria: getFieldValue(env.FIELD_CATEGORIA_ID),
+    descricao: getFieldValue(env.FIELD_DESCRICAO_ID),
+    clienteFornecedor: getFieldValue(env.FIELD_CLIENTE_FORNECEDOR_ID),
+    cnpjCpf: getFieldValue(env.FIELD_CNPJ_CPF_ID),
+    centroCusto: getFieldValue(env.FIELD_CENTRO_CUSTO_ID),
+    observacoes: getFieldValue(env.FIELD_OBSERVACOES_ID),
+  };
+
+  if (action === 'insert') {
+    await sheetsService.insertRow(cardId, rowData);
+  } else {
+    await sheetsService.updateRow(cardId, rowData);
+  }
+}
+

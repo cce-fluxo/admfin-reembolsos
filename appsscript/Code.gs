@@ -10,6 +10,8 @@ function doPost(e) {
       insertRow(sheet, cardId, data);
     } else if (action === 'remove') {
       removeRowByCardId(sheet, cardId);
+    } else if (action === 'update') {
+      updateRow(sheet, cardId, data);
     } else {
       throw new Error('Invalid action: ' + action);
     }
@@ -40,12 +42,44 @@ function insertRow(sheet, cardId, data) {
   ]);
 }
 
+function updateRow(sheet, cardId, data) {
+  const values = sheet.getDataRange().getValues();
+  let found = false;
+  
+  for (let i = 1; i < values.length; i++) { // Skip header
+    if (String(values[i][0]) === String(cardId)) {
+      const row = i + 1;
+      // Update the specific row
+      sheet.getRange(row, 2, 1, 10).setValues([[
+        data.competencia,
+        data.vencimento,
+        data.pagamento,
+        data.valor,
+        data.categoria,
+        data.descricao,
+        data.clienteFornecedor,
+        data.cnpjCpf,
+        data.centroCusto,
+        data.observacoes
+      ]]);
+      found = true;
+    }
+  }
+  
+  // If not found, insert it
+  if (!found) {
+    insertRow(sheet, cardId, data);
+  }
+}
+
 function removeRowByCardId(sheet, cardId) {
   const data = sheet.getDataRange().getValues();
+  const cardIdStr = String(cardId);
   // Iterate backwards to safely delete multiple matches if they exist
-  for (let i = data.length - 1; i >= 0; i--) {
-    if (data[i][0].toString() === cardId.toString()) {
+  for (let i = data.length - 1; i >= 1; i--) { // i >= 1 to skip header
+    if (String(data[i][0]) === cardIdStr) {
       sheet.deleteRow(i + 1);
     }
   }
 }
+

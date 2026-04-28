@@ -54,4 +54,12 @@ export class SheetsService {
       cardId,
     });
   }
+
+  async updateRow(cardId: string, data: SheetRowData): Promise<void> {
+    await this.callAppsScript({
+      action: 'update',
+      cardId,
+      data,
+    });
+  }
 }

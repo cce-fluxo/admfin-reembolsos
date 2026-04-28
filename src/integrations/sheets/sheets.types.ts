@@ -11,7 +11,7 @@ export interface SheetRowData {
   observacoes: string;
 }
 
-export type AppsScriptAction = 'insert' | 'remove';
+export type AppsScriptAction = 'insert' | 'remove' | 'update';
 
 export interface AppsScriptRequest {
   action: AppsScriptAction;
