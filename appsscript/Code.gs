@@ -1,11 +1,13 @@
 function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
   try {
     const payload = JSON.parse(e.postData.contents);
     const { action, cardId, data } = payload;
-    
+
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = spreadsheet.getSheets()[0]; // Default to first sheet
-    
+
     if (action === 'insert') {
       insertRow(sheet, cardId, data);
     } else if (action === 'remove') {
@@ -15,13 +17,15 @@ function doPost(e) {
     } else {
       throw new Error('Invalid action: ' + action);
     }
-    
+
     return ContentService.createTextOutput(JSON.stringify({ ok: true }))
       .setMimeType(ContentService.MimeType.JSON);
-    
+
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ ok: false, error: error.message }))
       .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
 }
 
@@ -49,10 +53,9 @@ function insertRow(sheet, cardId, data) {
 
 function updateRow(sheet, cardId, data) {
   const rowIndex = findRowIndex(sheet, cardId);
-  
+
   if (rowIndex !== -1) {
     const row = rowIndex + 1;
-    // Update the specific row
     sheet.getRange(row, 2, 1, 10).setValues([[
       data.competencia,
       data.vencimento,
@@ -65,6 +68,20 @@ function updateRow(sheet, cardId, data) {
       data.centroCusto,
       data.observacoes
     ]]);
+  } else {
+    sheet.appendRow([
+      cardId,
+      data.competencia,
+      data.vencimento,
+      data.pagamento,
+      data.valor,
+      data.categoria,
+      data.descricao,
+      data.clienteFornecedor,
+      data.cnpjCpf,
+      data.centroCusto,
+      data.observacoes
+    ]);
   }
 }
 

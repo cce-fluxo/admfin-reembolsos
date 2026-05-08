@@ -74,7 +74,7 @@ async function handleFieldUpdate(data: any): Promise<void> {
 
   // Always sync to Sheets on field update
   try {
-    await syncCardToSheets(card.id.toString(), 'update');
+    await syncCardToSheets(card.id.toString());
   } catch (error) {
     logger.error({ error, cardId: card.id }, 'Failed to sync card to Sheets on field update');
   }
@@ -90,7 +90,7 @@ async function handleCardMove(data: any): Promise<void> {
   if (toIdStr === env.SHEETS_FASE_MONITORADA) {
     logger.info({ cardId: card.id }, 'Fetching card details for Google Sheets insertion');
     try {
-      await syncCardToSheets(card.id.toString(), 'insert');
+      await syncCardToSheets(card.id.toString());
     } catch (error) {
       logger.error({ error, cardId: card.id }, 'Failed to process Sheets insertion');
     }
@@ -101,7 +101,7 @@ async function handleCardMove(data: any): Promise<void> {
   }
 }
 
-async function syncCardToSheets(cardId: string, action: 'insert' | 'update'): Promise<void> {
+async function syncCardToSheets(cardId: string): Promise<void> {
   const cardDetails = await pipefyService.getCardDetails(cardId);
 
   // Se o card não estiver na fase monitorada, não deve estar na planilha
@@ -127,10 +127,6 @@ async function syncCardToSheets(cardId: string, action: 'insert' | 'update'): Pr
     observacoes: getFieldValue(env.FIELD_OBSERVACOES_ID),
   };
 
-  if (action === 'insert') {
-    await sheetsService.insertRow(cardId, rowData);
-  } else {
-    await sheetsService.updateRow(cardId, rowData);
-  }
+  await sheetsService.insertRow(cardId, rowData);
 }
 
